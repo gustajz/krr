@@ -22,13 +22,15 @@ class PrometheusDiscovery(ServiceDiscovery):
     def find_prometheus_url(self, *, api_client: Optional[ApiClient] = None) -> Optional[str]:
         return super().find_url(
             selectors=[
-                "app=kube-prometheus-stack-prometheus",
-                "app=prometheus,component=server",
-                "app=prometheus-server",
-                "app=prometheus-operator-prometheus",
-                "app=prometheus-msteams",
-                "app=rancher-monitoring-prometheus",
-                "app=prometheus-prometheus",
+                # "app=kube-prometheus-stack-prometheus",
+                # "app=prometheus,component=server",
+                # "app=prometheus-server",
+                "app=prometheus-operator-prometheus,release=prometheus",
+                # "app.kubernetes.io/name=prometheus-thanos-querier",
+                # "app.kubernetes.io/name=prometheus-thanos-querier",
+                # "app=prometheus-msteams",
+                # "app=rancher-monitoring-prometheus",
+                # "app=prometheus-prometheus",
             ],
             api_client=api_client,
         )
@@ -120,7 +122,9 @@ class PrometheusLoader(Configurable):
                 *[
                     asyncio.to_thread(
                         self.prometheus.custom_query_range,
-                        query=f'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{{namespace="{object.namespace}", pod="{pod}", container="{object.container}"}})',
+                        # query=f'sum(namespace_pod_name_container_name:container_cpu_usage_seconds_total:sum_rate{{container_name="POD", namespace="dev2", pod_name="gpa-stock-integration-dev2-gpa-stock-integration-847845f64g8pg4"}})',
+                        query=f'sum(namespace_pod_name_container_name:container_cpu_usage_seconds_total:sum_rate{{container_name="{object.container}", namespace="{object.namespace}", pod_name="{pod}"}})',
+                        # query=f'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{{namespace="{object.namespace}", pod="{pod}", container="{object.container}"}})',
                         start_time=datetime.datetime.now() - period,
                         end_time=datetime.datetime.now(),
                         step=f"{int(timeframe.total_seconds()) // 60}m",
@@ -133,7 +137,9 @@ class PrometheusLoader(Configurable):
                 *[
                     asyncio.to_thread(
                         self.prometheus.custom_query_range,
-                        query=f'sum(container_memory_working_set_bytes{{job="kubelet", metrics_path="/metrics/cadvisor", image!="", namespace="{object.namespace}", pod="{pod}", container="{object.container}"}})',
+                        # query=f'sum(container_memory_working_set_bytes{{job="kubelet",metrics_path="/metrics/cadvisor", name="k8s_POD_kube2iam-h8r46_kube-system_014c7842-92e7-11ed-8dd4-0215e495087a_0", namespace="kube-system", node="ip-10-250-34-40.sa-east-1.compute.internal", pod_name="kube2iam-h8r46", service="prometheus-kubelet"}})',
+                        query=f'sum(container_memory_working_set_bytes{{job="kubelet", metrics_path="/metrics/cadvisor", image!="", namespace="{object.namespace}", pod_name="{pod}", container_name="{object.container}"}})',
+                        # query=f'sum(container_memory_working_set_bytes{{job="kubelet", metrics_path="/metrics/cadvisor", image!="", namespace="{object.namespace}", pod="{pod}", container="{object.container}"}})',
                         start_time=datetime.datetime.now() - period,
                         end_time=datetime.datetime.now(),
                         step=f"{int(timeframe.total_seconds()) // 60}m",

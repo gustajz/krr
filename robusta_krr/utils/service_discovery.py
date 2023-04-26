@@ -34,7 +34,7 @@ class ServiceDiscovery(Configurable):
             return f"http://{name}.{namespace}.svc.cluster.local:{port}"
 
         elif api_client is not None:
-            return f"{api_client.configuration.host}/api/v1/namespaces/{namespace}/services/{name}:{port}/proxy"
+            return f"{api_client.configuration.host}/api/v1/namespaces/{namespace}/services/{name}:{port}/proxy/prometheus"
 
         return None
 
